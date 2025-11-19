@@ -1,0 +1,15 @@
+[package]
+name = "dei-metrics"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+dei-core = { path = "../dei-core" }
+
+thiserror.workspace = true
+petgraph.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+

@@ -1,0 +1,19 @@
+[package]
+name = "dei-languages"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+dei-core = { path = "../dei-core" }
+
+thiserror.workspace = true
+tree-sitter.workspace = true
+tree-sitter-rust.workspace = true
+tree-sitter-c-sharp.workspace = true
+syn.workspace = true
+once_cell.workspace = true
+regex.workspace = true
+
+

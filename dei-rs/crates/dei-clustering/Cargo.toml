@@ -1,0 +1,16 @@
+[package]
+name = "dei-clustering"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+dei-core = { path = "../dei-core" }
+
+thiserror.workspace = true
+ndarray.workspace = true
+linfa.workspace = true
+linfa-clustering.workspace = true
+rayon.workspace = true
+

@@ -1,0 +1,18 @@
+[package]
+name = "dei-ast"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+dei-core = { path = "../dei-core" }
+
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rayon.workspace = true
+dashmap.workspace = true
+walkdir.workspace = true
+ignore.workspace = true
+

@@ -1,0 +1,26 @@
+[package]
+name = "dei-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "dei"
+path = "src/main.rs"
+
+[dependencies]
+dei-core = { path = "../dei-core" }
+dei-ast = { path = "../dei-ast" }
+dei-languages = { path = "../dei-languages" }
+dei-clustering = { path = "../dei-clustering" }
+dei-metrics = { path = "../dei-metrics" }
+
+clap.workspace = true
+colored.workspace = true
+indicatif.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
