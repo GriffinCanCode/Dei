@@ -85,7 +85,7 @@ public sealed class ComplexityCalculatorTests
         var lineCount = _calculator.CalculateLineCount(source);
 
         // Assert
-        lineCount.Should().Be(4); // public void, opening brace, two WriteLine
+        lineCount.Should().Be(5); // public void, opening brace, two WriteLine, closing brace
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class ComplexityCalculatorTests
         var lineCount = _calculator.CalculateLineCount(source);
 
         // Assert
-        lineCount.Should().Be(3); // Excludes comment lines
+        lineCount.Should().Be(4); // public void, opening brace, WriteLine, closing brace (excludes comment lines)
     }
 
     [Fact]

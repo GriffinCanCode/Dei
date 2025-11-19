@@ -13,7 +13,8 @@ using GodClassDetector.Core.Interfaces;
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>
     {
-        config.SetBasePath(Directory.GetCurrentDirectory())
+        var appPath = AppContext.BaseDirectory;
+        config.SetBasePath(appPath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables()
             .AddCommandLine(args);

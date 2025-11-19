@@ -16,5 +16,10 @@ public interface IGodClassDetector
         string projectPath,
         DetectionThresholds? thresholds = null,
         CancellationToken cancellationToken = default);
+
+    Task<Result<FileSystemNode>> AnalyzeProjectASTAsync(
+        string projectPath,
+        DetectionThresholds? thresholds = null,
+        CancellationToken cancellationToken = default);
 }
 

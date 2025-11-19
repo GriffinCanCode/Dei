@@ -3,6 +3,7 @@ using Spectre.Console;
 using GodClassDetector.Core.Interfaces;
 using GodClassDetector.Core.Models;
 using GodClassDetector.Console.Configuration;
+using GodClassDetector.Analysis.Reporting;
 
 namespace GodClassDetector.Console.Services;
 
@@ -13,6 +14,7 @@ public sealed class DetectorApplication
 {
     private readonly IGodClassDetector _detector;
     private readonly IReportGenerator _reportGenerator;
+    private readonly ASTReportGenerator _astReportGenerator;
     private readonly DetectionOptions _options;
 
     public DetectorApplication(
@@ -22,6 +24,7 @@ public sealed class DetectorApplication
     {
         _detector = detector ?? throw new ArgumentNullException(nameof(detector));
         _reportGenerator = reportGenerator ?? throw new ArgumentNullException(nameof(reportGenerator));
+        _astReportGenerator = new ASTReportGenerator();
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
@@ -35,10 +38,51 @@ public sealed class DetectorApplication
             return 1;
         }
 
-        var targetPath = args[0];
+        var command = args[0].ToLowerInvariant();
         var thresholds = _options.ToThresholds();
+        
+        // Handle "dei check" command pattern
+        if (command == "check")
+        {
+            var targetPath = args.Length > 1 ? args[1] : ".";
+            return await RunCheckCommandAsync(targetPath, thresholds);
+        }
 
-        return await AnalyzeTargetAsync(targetPath, thresholds);
+        // Fallback to legacy mode for compatibility
+        var path = args[0];
+        return await AnalyzeTargetAsync(path, thresholds);
+    }
+
+    private async Task<int> RunCheckCommandAsync(string targetPath, DetectionThresholds thresholds)
+    {
+        // Use current directory if no path specified
+        if (string.IsNullOrWhiteSpace(targetPath) || targetPath == ".")
+        {
+            targetPath = Directory.GetCurrentDirectory();
+        }
+
+        if (!Path.Exists(targetPath))
+        {
+            AnsiConsole.MarkupLine($"[red]Error:[/] Path not found: {targetPath}");
+            return 1;
+        }
+
+        return await AnsiConsole.Status()
+            .StartAsync("Building project AST and analyzing...", async ctx =>
+            {
+                ctx.Spinner(Spinner.Known.Dots);
+
+                // Use AST-based analysis with parallel traversal
+                var result = await _detector.AnalyzeProjectASTAsync(targetPath, thresholds);
+
+                return result.Match(
+                    onSuccess: ast => DisplayASTResults(ast),
+                    onFailure: error =>
+                    {
+                        AnsiConsole.MarkupLine($"[red]Error:[/] {error}");
+                        return 1;
+                    });
+            });
     }
 
     private async Task<int> AnalyzeTargetAsync(string targetPath, DetectionThresholds thresholds)
@@ -199,12 +243,40 @@ public sealed class DetectorApplication
         AnsiConsole.WriteLine();
     }
 
+    private int DisplayASTResults(FileSystemNode ast)
+    {
+        var report = _astReportGenerator.GenerateReport(ast);
+
+        // Display summary
+        var summaryText = _astReportGenerator.GenerateConsoleReport(report);
+        AnsiConsole.WriteLine(summaryText);
+        AnsiConsole.WriteLine();
+
+        // Display tree view of problems
+        var hasIssues = report.GodFiles.Any() || report.GodClasses.Any() || report.TotalGodMethods > 0;
+        if (hasIssues)
+        {
+            AnsiConsole.MarkupLine("[bold yellow]Problem Files in Project Structure:[/]");
+            AnsiConsole.WriteLine();
+            var treeView = _astReportGenerator.GenerateTreeView(ast, showOnlyProblems: true);
+            AnsiConsole.WriteLine(treeView);
+        }
+
+        return hasIssues ? 1 : 0;
+    }
+
     private static void DisplayUsage()
     {
         AnsiConsole.MarkupLine("[bold]Usage:[/]");
-        AnsiConsole.MarkupLine("  dotnet run <path-to-file-or-directory>");
+        AnsiConsole.MarkupLine("  dei check [path]");
+        AnsiConsole.MarkupLine("  dotnet run check [path]");
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[bold]Examples:[/]");
+        AnsiConsole.MarkupLine("  dei check                    # Check current directory");
+        AnsiConsole.MarkupLine("  dei check ./src/MyProject    # Check specific directory");
+        AnsiConsole.MarkupLine("  dotnet run check .           # Check current directory");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[dim]Legacy mode (deprecated):[/]");
         AnsiConsole.MarkupLine("  dotnet run ./MyClass.cs");
         AnsiConsole.MarkupLine("  dotnet run ./src/MyProject");
     }

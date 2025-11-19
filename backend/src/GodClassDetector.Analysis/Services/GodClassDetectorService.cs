@@ -10,6 +10,8 @@ public sealed class GodClassDetectorService : IGodClassDetector
 {
     private readonly IClassParser _classParser;
     private readonly ISemanticAnalyzer _semanticAnalyzer;
+    private readonly FileSystemASTBuilder _astBuilder;
+    private readonly ParallelASTTraverser _astTraverser;
 
     public GodClassDetectorService(
         IClassParser classParser,
@@ -17,6 +19,8 @@ public sealed class GodClassDetectorService : IGodClassDetector
     {
         _classParser = classParser ?? throw new ArgumentNullException(nameof(classParser));
         _semanticAnalyzer = semanticAnalyzer ?? throw new ArgumentNullException(nameof(semanticAnalyzer));
+        _astBuilder = new FileSystemASTBuilder();
+        _astTraverser = new ParallelASTTraverser(classParser, this);
     }
 
     public async Task<Result<AnalysisResult>> AnalyzeClassAsync(
@@ -62,6 +66,27 @@ public sealed class GodClassDetectorService : IGodClassDetector
         return Result<IReadOnlyList<AnalysisResult>>.Success(results);
     }
 
+    public async Task<Result<FileSystemNode>> AnalyzeProjectASTAsync(
+        string projectPath,
+        DetectionThresholds? thresholds = null,
+        CancellationToken cancellationToken = default)
+    {
+        thresholds ??= new DetectionThresholds();
+
+        // Build filesystem AST
+        var astResult = await _astBuilder.BuildASTAsync(projectPath, cancellationToken);
+        if (!astResult.IsSuccess)
+            return Result<FileSystemNode>.Failure(astResult.Error);
+
+        // Traverse AST in parallel, building sub-ASTs of classes/functions
+        var traversalResult = await _astTraverser.TraverseAndAnalyzeAsync(
+            astResult.Value,
+            thresholds,
+            cancellationToken);
+
+        return traversalResult;
+    }
+
     private async Task<Result<AnalysisResult>> AnalyzeClassMetricsAsync(
         ClassMetrics classMetrics,
         DetectionThresholds thresholds,
@@ -84,6 +109,7 @@ public sealed class GodClassDetectorService : IGodClassDetector
             ClassMetrics = classMetrics,
             IsGodClass = true,
             SuggestedExtractions = clusterResult.Value,
+            GodMethods = Array.Empty<GodMethodResult>(),
             AnalyzedAt = DateTime.UtcNow,
             Summary = summary
         };
