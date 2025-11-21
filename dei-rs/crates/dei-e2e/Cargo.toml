@@ -1,0 +1,36 @@
+[package]
+name = "dei-e2e"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+# Internal crates
+dei-core = { path = "../dei-core" }
+dei-ast = { path = "../dei-ast" }
+dei-metrics = { path = "../dei-metrics" }
+dei-clustering = { path = "../dei-clustering" }
+dei-languages = { path = "../dei-languages" }
+
+# Testing utilities
+anyhow.workspace = true
+tokio = { workspace = true, features = ["full"] }
+tempfile = "3.8"
+assert_cmd = "2.0"
+predicates = "3.0"
+insta = "1.34"
+
+# Utilities
+serde.workspace = true
+serde_json.workspace = true
+walkdir.workspace = true
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "e2e_benchmarks"
+harness = false
+

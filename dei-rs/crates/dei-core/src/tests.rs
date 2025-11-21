@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{metrics::*, thresholds::*};
+    use std::sync::Arc;
 
     #[test]
     fn test_threshold_validation() {

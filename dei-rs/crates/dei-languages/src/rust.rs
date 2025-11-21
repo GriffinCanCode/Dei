@@ -2,11 +2,11 @@
 //! 
 //! Dual approach: tree-sitter for speed, syn for deep analysis
 
-use dei_core::{error::Result, metrics::*, models::Language, Error};
+use dei_core::{error::Result, metrics::*, thresholds::*, Error};
 use once_cell::sync::Lazy;
 use std::path::Path;
 use std::sync::Arc;
-use tree_sitter::{Parser, Query, QueryCursor};
+use tree_sitter::Parser;
 
 use crate::complexity::ComplexityCalculator;
 
@@ -21,7 +21,7 @@ impl RustParser {
     pub fn new() -> Result<Self> {
         let mut parser = Parser::new();
         parser
-            .set_language(*RUST_LANGUAGE)
+            .set_language(&*RUST_LANGUAGE)
             .map_err(|e| Error::Analysis(format!("Failed to set Rust language: {}", e)))?;
         
         Ok(Self { parser })
@@ -40,24 +40,44 @@ impl RustParser {
             })?;
 
         let root = tree.root_node();
-        let mut classes = Vec::new();
+        let mut type_defs = std::collections::HashMap::new();
+        let mut impls = Vec::new();
 
-        // Find all structs, enums, and impls
+        // First pass: collect type definitions and impl blocks
         let mut cursor = root.walk();
         for node in root.children(&mut cursor) {
             match node.kind() {
                 "struct_item" | "enum_item" => {
                     if let Some(class_metrics) = self.parse_type(&node, source_bytes, path) {
-                        classes.push(class_metrics);
+                        let name = class_metrics.name.to_string();
+                        type_defs.insert(name, class_metrics);
                     }
                 }
                 "impl_item" => {
-                    // Parse implementation blocks
                     if let Some(class_metrics) = self.parse_impl(&node, source_bytes, path) {
-                        classes.push(class_metrics);
+                        impls.push(class_metrics);
                     }
                 }
                 _ => {}
+            }
+        }
+
+        // Second pass: merge impl blocks into type definitions
+        for impl_metrics in impls {
+            let type_name = impl_metrics.name.to_string();
+            
+            if let Some(type_def) = type_defs.get_mut(&type_name) {
+                // Merge methods from impl into the type definition
+                let mut all_methods = Vec::from(type_def.methods.as_ref());
+                all_methods.extend_from_slice(&impl_metrics.methods);
+                
+                type_def.methods = all_methods.into();
+                type_def.method_count = MethodCount(type_def.methods.len());
+                type_def.lines = Lines(type_def.lines.0 + impl_metrics.lines.0);
+                type_def.complexity = Complexity(type_def.complexity.0 + impl_metrics.complexity.0);
+            } else {
+                // Impl without a type definition in this file (e.g., impl for external type)
+                type_defs.insert(type_name, impl_metrics);
             }
         }
 
@@ -66,7 +86,7 @@ impl RustParser {
         Ok(FileMetrics {
             path: path.to_string_lossy().to_string().into(),
             lines,
-            classes: classes.into(),
+            classes: type_defs.into_values().collect::<Vec<_>>().into(),
         })
     }
 
@@ -118,10 +138,16 @@ impl RustParser {
         let mut methods = Vec::new();
         let mut cursor = node.walk();
         
+        // Methods are inside the declaration_list
         for child in node.children(&mut cursor) {
-            if child.kind() == "function_item" {
-                if let Some(method) = self.parse_method(&child, source) {
-                    methods.push(method);
+            if child.kind() == "declaration_list" {
+                let mut decl_cursor = child.walk();
+                for decl_child in child.children(&mut decl_cursor) {
+                    if decl_child.kind() == "function_item" {
+                        if let Some(method) = self.parse_method(&decl_child, source) {
+                            methods.push(method);
+                        }
+                    }
                 }
             }
         }
@@ -188,8 +214,8 @@ impl RustParser {
 
     fn is_async_fn(&self, node: &tree_sitter::Node) -> bool {
         let mut cursor = node.walk();
-        node.children(&mut cursor)
-            .any(|c| c.kind() == "async")
+        let children: Vec<_> = node.children(&mut cursor).collect();
+        children.iter().any(|c| c.kind() == "async")
     }
 
     fn count_fields(&self, node: &tree_sitter::Node) -> usize {

@@ -2,7 +2,7 @@
 //! 
 //! Compatible with the original C# version but using Rust for performance
 
-use dei_core::{error::Result, metrics::*, models::Language, Error};
+use dei_core::{error::Result, metrics::*, thresholds::*, Error};
 use once_cell::sync::Lazy;
 use std::path::Path;
 use std::sync::Arc;
@@ -21,7 +21,7 @@ impl CSharpParser {
     pub fn new() -> Result<Self> {
         let mut parser = Parser::new();
         parser
-            .set_language(*CSHARP_LANGUAGE)
+            .set_language(&*CSHARP_LANGUAGE)
             .map_err(|e| Error::Analysis(format!("Failed to set C# language: {}", e)))?;
         
         Ok(Self { parser })
@@ -42,14 +42,8 @@ impl CSharpParser {
         let root = tree.root_node();
         let mut classes = Vec::new();
 
-        let mut cursor = root.walk();
-        for node in root.children(&mut cursor) {
-            if node.kind() == "class_declaration" {
-                if let Some(class_metrics) = self.parse_class(&node, source_bytes, path) {
-                    classes.push(class_metrics);
-                }
-            }
-        }
+        // Recursively find all class declarations
+        self.find_classes(&root, source_bytes, path, &mut classes);
 
         let lines = ComplexityCalculator::count_lines(&source);
 
@@ -58,6 +52,29 @@ impl CSharpParser {
             lines,
             classes: classes.into(),
         })
+    }
+
+    fn find_classes(
+        &self,
+        node: &tree_sitter::Node,
+        source: &[u8],
+        path: &Path,
+        classes: &mut Vec<ClassMetrics>,
+    ) {
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            if child.kind() == "class_declaration" {
+                if let Some(class_metrics) = self.parse_class(&child, source, path) {
+                    classes.push(class_metrics);
+                }
+            } else if child.kind() == "namespace_declaration" {
+                // Recursively search inside namespaces
+                self.find_classes(&child, source, path, classes);
+            } else if child.named_child_count() > 0 {
+                // Recursively search in other containers
+                self.find_classes(&child, source, path, classes);
+            }
+        }
     }
 
     fn parse_class(

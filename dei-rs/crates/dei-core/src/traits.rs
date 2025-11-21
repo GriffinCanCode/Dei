@@ -1,6 +1,11 @@
 //! Core traits for extensibility
 
-use crate::{error::Result, metrics::*, models::*, thresholds::Thresholds};
+use crate::{
+    error::Result,
+    metrics::*,
+    models::*,
+    thresholds::{Complexity, Lines, Thresholds},
+};
 use std::path::Path;
 
 /// Trait for parsing source files into metrics
@@ -9,7 +14,7 @@ pub trait Parser: Send + Sync {
     fn parse_file(&self, path: &Path) -> Result<FileMetrics>;
     
     /// Get supported languages
-    fn supported_languages(&self) -> &[models::Language];
+    fn supported_languages(&self) -> &[Language];
 }
 
 /// Trait for calculating code complexity

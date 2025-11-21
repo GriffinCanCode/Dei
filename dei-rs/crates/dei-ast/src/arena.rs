@@ -2,52 +2,52 @@
 //! 
 //! Provides cache-friendly memory layout and fast traversal
 
-use std::cell::RefCell;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use crate::node::{Node, NodeId};
 
-/// Thread-local arena for AST nodes
+/// Thread-safe arena for AST nodes
 /// Uses generational indexing to prevent use-after-free
 #[derive(Debug)]
 pub struct Arena {
-    nodes: RefCell<Vec<Node>>,
+    nodes: RwLock<Vec<Node>>,
 }
 
 impl Arena {
     pub fn new() -> Self {
         Self {
-            nodes: RefCell::new(Vec::new()),
+            nodes: RwLock::new(Vec::new()),
         }
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            nodes: RefCell::new(Vec::with_capacity(capacity)),
+            nodes: RwLock::new(Vec::with_capacity(capacity)),
         }
     }
 
     /// Allocate a new node in the arena
-    pub fn alloc(&self, node: Node) -> NodeId {
-        let mut nodes = self.nodes.borrow_mut();
+    pub fn alloc(&self, mut node: Node) -> NodeId {
+        let mut nodes = self.nodes.write().unwrap();
         let id = NodeId(nodes.len());
+        node.id = id; // Update the node's ID field to match its arena position
         nodes.push(node);
         id
     }
 
     /// Get a node by ID
     pub fn get(&self, id: NodeId) -> Option<Node> {
-        self.nodes.borrow().get(id.0).cloned()
+        self.nodes.read().unwrap().get(id.0).cloned()
     }
 
     /// Get a mutable reference to a node
     pub fn get_mut(&self, id: NodeId) -> Option<Node> {
-        self.nodes.borrow().get(id.0).cloned()
+        self.nodes.read().unwrap().get(id.0).cloned()
     }
 
     /// Update a node in place
     pub fn update(&self, id: NodeId, node: Node) {
-        if let Some(slot) = self.nodes.borrow_mut().get_mut(id.0) {
+        if let Some(slot) = self.nodes.write().unwrap().get_mut(id.0) {
             *slot = node;
         }
     }
@@ -61,7 +61,7 @@ impl Arena {
 
     /// Total number of nodes
     pub fn len(&self) -> usize {
-        self.nodes.borrow().len()
+        self.nodes.read().unwrap().len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -71,7 +71,8 @@ impl Arena {
     /// Iterate over all nodes with their IDs
     pub fn iter(&self) -> impl Iterator<Item = (NodeId, Node)> {
         self.nodes
-            .borrow()
+            .read()
+            .unwrap()
             .iter()
             .enumerate()
             .map(|(i, n)| (NodeId(i), n.clone()))

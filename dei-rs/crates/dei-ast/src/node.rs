@@ -10,7 +10,7 @@ use std::sync::Arc;
 pub struct NodeId(pub usize);
 
 /// AST node representing file system or code structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Node {
     pub id: NodeId,
     pub kind: NodeKind,

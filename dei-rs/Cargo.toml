@@ -6,6 +6,7 @@ members = [
     "crates/dei-clustering",
     "crates/dei-languages",
     "crates/dei-cli",
+    "crates/dei-e2e",
 ]
 resolver = "2"
 
@@ -15,12 +16,17 @@ edition = "2021"
 authors = ["Griffin Strier"]
 license = "MIT"
 repository = "https://github.com/GriffinCanCode/Dei"
+homepage = "https://github.com/GriffinCanCode/Dei"
+documentation = "https://docs.rs/dei"
+description = "Static analysis tool for detecting god classes and god methods"
+keywords = ["static-analysis", "code-quality", "linter", "refactoring"]
+categories = ["development-tools", "command-line-utilities"]
 
 [workspace.dependencies]
 # Core
 anyhow = "1.0"
 thiserror = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 
 # Async & Parallel

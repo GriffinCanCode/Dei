@@ -1,20 +1,27 @@
 [package]
-name = "dei-cli"
+name = "dei"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
 
 [[bin]]
 name = "dei"
 path = "src/main.rs"
 
 [dependencies]
-dei-core = { path = "../dei-core" }
-dei-ast = { path = "../dei-ast" }
-dei-languages = { path = "../dei-languages" }
-dei-clustering = { path = "../dei-clustering" }
-dei-metrics = { path = "../dei-metrics" }
+dei-core = { version = "0.1.0", path = "../dei-core" }
+dei-ast = { version = "0.1.0", path = "../dei-ast" }
+dei-languages = { version = "0.1.0", path = "../dei-languages" }
+dei-clustering = { version = "0.1.0", path = "../dei-clustering" }
+dei-metrics = { version = "0.1.0", path = "../dei-metrics" }
 
 clap.workspace = true
 colored.workspace = true

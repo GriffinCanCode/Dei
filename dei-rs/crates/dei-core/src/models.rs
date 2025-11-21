@@ -61,8 +61,13 @@ pub struct AnalysisResult {
     pub is_god_class: bool,
     pub suggested_extractions: Arc<[ResponsibilityCluster]>,
     pub god_methods: Arc<[GodMethodResult]>,
+    #[serde(skip_serializing, default = "default_systemtime")]
     pub analyzed_at: SystemTime,
     pub summary: Arc<str>,
+}
+
+fn default_systemtime() -> SystemTime {
+    SystemTime::now()
 }
 
 impl AnalysisResult {

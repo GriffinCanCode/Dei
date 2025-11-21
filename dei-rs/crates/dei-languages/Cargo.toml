@@ -4,9 +4,11 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+description = "Multi-language parsing for DEI"
 
 [dependencies]
-dei-core = { path = "../dei-core" }
+dei-core = { version = "0.1.0", path = "../dei-core" }
 
 thiserror.workspace = true
 tree-sitter.workspace = true

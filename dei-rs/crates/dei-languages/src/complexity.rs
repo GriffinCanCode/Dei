@@ -3,7 +3,7 @@
 //! Improved algorithm using tree-sitter for accurate AST-based analysis
 
 use dei_core::{metrics::*, thresholds::*};
-use tree_sitter::{Node, Parser, Query, QueryCursor};
+use tree_sitter::Node;
 
 /// Calculate complexity from tree-sitter AST
 pub struct ComplexityCalculator;
@@ -14,7 +14,6 @@ impl ComplexityCalculator {
     pub fn calculate_from_tree(node: &Node, source: &[u8]) -> Complexity {
         let mut complexity = 1; // Base complexity
 
-        let mut cursor = node.walk();
         let mut visit_stack = vec![node.clone()];
 
         while let Some(current) = visit_stack.pop() {
@@ -75,7 +74,7 @@ impl ComplexityCalculator {
     }
 
     /// Extract parameter count from function node
-    pub fn count_parameters(node: &Node, source: &[u8]) -> ParamCount {
+    pub fn count_parameters(node: &Node, _source: &[u8]) -> ParamCount {
         let mut count = 0;
 
         if let Some(params) = node.child_by_field_name("parameters") {
@@ -131,8 +130,9 @@ fn split_identifier(s: &str) -> Vec<String> {
 
 impl dei_core::traits::ComplexityCalculator for ComplexityCalculator {
     fn calculate_complexity(&self, source: &str) -> Complexity {
-        // Fallback for when we don't have parsed tree
-        Self::count_lines(source)
+        // Fallback for when we don't have parsed tree - estimate from lines
+        let lines = Self::count_lines(source);
+        Complexity(lines.0 / 10 + 1) // Rough estimate: 1 complexity per 10 lines
     }
 
     fn count_lines(&self, source: &str) -> Lines {

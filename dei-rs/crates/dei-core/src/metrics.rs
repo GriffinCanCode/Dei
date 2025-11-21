@@ -2,7 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-
 use crate::thresholds::*;
 
 /// Method-level metrics with zero-copy strings where possible

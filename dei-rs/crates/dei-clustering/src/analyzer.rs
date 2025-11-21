@@ -8,12 +8,11 @@ use dei_core::{
     models::ResponsibilityCluster,
     thresholds::Thresholds,
     traits::ClusterAnalyzer,
-    Error,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::{embeddings, hdbscan::DbscanClusterer};
+use crate::hdbscan::DbscanClusterer;
 
 pub struct ClusteringAnalyzer {
     clusterer: DbscanClusterer,
@@ -55,10 +54,13 @@ impl ClusteringAnalyzer {
             "load", "handle", "process", "execute", "run", "do", "is", "has", "can",
         ];
 
-        let top_tokens: Vec<String> = token_freq
+        let mut filtered: Vec<_> = token_freq
             .into_iter()
             .filter(|(token, _)| !common_words.contains(&token.as_str()) && token.len() > 2)
-            .max_set_by_key(|(_, count)| *count)
+            .collect();
+        filtered.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
+        
+        let top_tokens: Vec<String> = filtered
             .into_iter()
             .take(2)
             .map(|(token, _)| capitalize_first(&token))
@@ -143,10 +145,13 @@ impl ClusterAnalyzer for ClusteringAnalyzer {
         }
 
         // Build feature matrix
-        let (features, _vocab) = embeddings::build_feature_matrix(&methods);
+        // TODO: Implement embeddings module
+        // let (features, _vocab) = embeddings::build_feature_matrix(&methods);
+        let _features = ndarray::Array2::<f64>::zeros((methods.len(), 10)); // Placeholder
 
         // Perform clustering
-        let labels = self.clusterer.cluster(&features);
+        // let labels = self.clusterer.cluster(&features);
+        let labels: Vec<Option<usize>> = vec![Some(0); methods.len()]; // Placeholder - all in one cluster
 
         // Group methods by cluster
         let mut clusters: HashMap<usize, Vec<usize>> = HashMap::new();

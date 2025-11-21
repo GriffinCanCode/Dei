@@ -1,0 +1,10 @@
+# Test artifacts
+/target/
+/fixtures/generated/
+
+# Benchmark results
+/target/criterion/
+
+# Temporary test files
+*.tmp
+

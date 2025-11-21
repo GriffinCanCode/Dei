@@ -22,10 +22,14 @@ pub async fn run(
     format: String,
     verbose: bool,
 ) -> Result<()> {
-    println!("{}", "╔════════════════════════════════════════════════════════════╗".bright_cyan());
-    println!("{}", "║           DEI - CODE ANALYSIS (Rust Edition)               ║".bright_cyan());
-    println!("{}", "╚════════════════════════════════════════════════════════════╝".bright_cyan());
-    println!();
+    let is_json = format == "json";
+
+    if !is_json {
+        println!("{}", "╔════════════════════════════════════════════════════════════╗".bright_cyan());
+        println!("{}", "║           DEI - CODE ANALYSIS (Rust Edition)               ║".bright_cyan());
+        println!("{}", "╚════════════════════════════════════════════════════════════╝".bright_cyan());
+        println!();
+    }
 
     // Setup thresholds
     let thresholds = Thresholds {
@@ -35,34 +39,56 @@ pub async fn run(
         ..Default::default()
     };
 
-    thresholds.validate()?;
+    thresholds.validate().map_err(|e| anyhow::anyhow!(e))?;
 
-    println!("📂 Analyzing: {}", path.display().to_string().bright_yellow());
-    println!();
+    if !is_json {
+        println!("📂 Analyzing: {}", path.display().to_string().bright_yellow());
+        println!();
+    }
 
     // Build AST
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.cyan} {msg}")
-            .unwrap(),
-    );
-    spinner.set_message("Building filesystem AST...");
+    let spinner = if !is_json {
+        let s = ProgressBar::new_spinner();
+        s.set_style(
+            ProgressStyle::default_spinner()
+                .template("{spinner:.cyan} {msg}")
+                .unwrap(),
+        );
+        s.set_message("Building filesystem AST...");
+        Some(s)
+    } else {
+        None
+    };
 
     let builder = AstBuilder::new();
     let root_id = builder.build(&path)?;
-    spinner.finish_with_message("✓ AST built".green().to_string());
+    
+    if let Some(s) = spinner {
+        s.finish_and_clear();
+        println!("{}", "✓ AST built".green());
+    }
 
     // Parse and analyze
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_message("Analyzing files in parallel...");
+    let spinner = if !is_json {
+        let s = ProgressBar::new_spinner();
+        s.set_message("Analyzing files in parallel...");
+        Some(s)
+    } else {
+        None
+    };
 
     let parser = MultiLanguageParser::new()?;
     let traverser = ParallelTraverser::new(parser, builder.arena().clone());
     traverser.traverse_and_analyze(root_id, &thresholds)?;
 
-    spinner.finish_with_message("✓ Analysis complete".green().to_string());
-    println!();
+    if let Some(s) = spinner {
+        s.finish_and_clear();
+        println!("{}", "✓ Analysis complete".green());
+    }
+
+    if !is_json {
+        println!();
+    }
 
     // Get results
     let all_results = traverser.all_results();

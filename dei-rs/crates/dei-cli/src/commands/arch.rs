@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 pub async fn run(path: PathBuf) -> Result<()> {
     println!("{}", "╔════════════════════════════════════════════════════════════╗".bright_cyan());
-    println!("{}", "║         ARCHITECTURE QUALITY ANALYSIS                      ║".bright_cyan());
+    println!("{}", "║         DEI - ARCHITECTURE QUALITY ANALYSIS                ║".bright_cyan());
     println!("{}", "╚════════════════════════════════════════════════════════════╝".bright_cyan());
     println!();
 
