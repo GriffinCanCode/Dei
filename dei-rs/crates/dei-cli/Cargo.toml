@@ -17,11 +17,11 @@ name = "dei"
 path = "src/main.rs"
 
 [dependencies]
-dei-core = { version = "0.1.0", path = "../dei-core" }
-dei-ast = { version = "0.1.0", path = "../dei-ast" }
-dei-languages = { version = "0.1.0", path = "../dei-languages" }
-dei-clustering = { version = "0.1.0", path = "../dei-clustering" }
-dei-metrics = { version = "0.1.0", path = "../dei-metrics" }
+dei-core = { version = "0.1.1", path = "../dei-core" }
+dei-ast = { version = "0.1.1", path = "../dei-ast" }
+dei-languages = { version = "0.1.1", path = "../dei-languages" }
+dei-clustering = { version = "0.1.1", path = "../dei-clustering" }
+dei-metrics = { version = "0.1.1", path = "../dei-metrics" }
 
 clap.workspace = true
 colored.workspace = true

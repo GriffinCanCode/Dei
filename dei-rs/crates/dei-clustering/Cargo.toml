@@ -8,7 +8,7 @@ repository.workspace = true
 description = "Clustering analysis for DEI"
 
 [dependencies]
-dei-core = { version = "0.1.0", path = "../dei-core" }
+dei-core = { version = "0.1.1", path = "../dei-core" }
 
 thiserror.workspace = true
 ndarray.workspace = true
