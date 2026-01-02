@@ -97,6 +97,8 @@ pub enum Language {
     TypeScript,
     Go,
     Java,
+    Perl,
+    R,
 }
 
 impl Language {
@@ -109,6 +111,8 @@ impl Language {
             "ts" => Some(Language::TypeScript),
             "go" => Some(Language::Go),
             "java" => Some(Language::Java),
+            "pl" | "pm" | "t" => Some(Language::Perl),
+            "r" | "R" => Some(Language::R),
             _ => None,
         }
     }
@@ -122,6 +126,8 @@ impl Language {
             Language::TypeScript => &["ts"],
             Language::Go => &["go"],
             Language::Java => &["java"],
+            Language::Perl => &["pl", "pm", "t"],
+            Language::R => &["r", "R"],
         }
     }
 }

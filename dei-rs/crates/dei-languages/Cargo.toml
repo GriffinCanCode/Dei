@@ -12,8 +12,15 @@ dei-core = { version = "0.1.0", path = "../dei-core" }
 
 thiserror.workspace = true
 tree-sitter.workspace = true
+tree-sitter-language.workspace = true
 tree-sitter-rust.workspace = true
 tree-sitter-c-sharp.workspace = true
+tree-sitter-python.workspace = true
+tree-sitter-javascript.workspace = true
+tree-sitter-typescript.workspace = true
+tree-sitter-java.workspace = true
+tree-sitter-perl.workspace = true
+tree-sitter-r.workspace = true
 syn.workspace = true
 once_cell.workspace = true
 regex.workspace = true

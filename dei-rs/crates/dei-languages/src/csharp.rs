@@ -10,7 +10,7 @@ use tree_sitter::Parser;
 
 use crate::complexity::ComplexityCalculator;
 
-static CSHARP_LANGUAGE: Lazy<tree_sitter::Language> = Lazy::new(tree_sitter_c_sharp::language);
+static CSHARP_LANGUAGE: Lazy<tree_sitter::Language> = Lazy::new(|| tree_sitter_c_sharp::LANGUAGE.into());
 
 /// C#-specific parser
 pub struct CSharpParser {

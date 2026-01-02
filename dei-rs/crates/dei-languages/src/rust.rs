@@ -10,7 +10,7 @@ use tree_sitter::Parser;
 
 use crate::complexity::ComplexityCalculator;
 
-static RUST_LANGUAGE: Lazy<tree_sitter::Language> = Lazy::new(tree_sitter_rust::language);
+static RUST_LANGUAGE: Lazy<tree_sitter::Language> = Lazy::new(|| tree_sitter_rust::LANGUAGE.into());
 
 /// Rust-specific parser
 pub struct RustParser {

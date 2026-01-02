@@ -4,6 +4,11 @@
 
 pub mod rust;
 pub mod csharp;
+pub mod python;
+pub mod javascript;
+pub mod java;
+pub mod perl;
+pub mod r;
 pub mod complexity;
 pub mod multi_parser;
 

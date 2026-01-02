@@ -47,7 +47,7 @@ impl ComplexityCalculator {
 
             // Add children to stack
             for i in 0..current.child_count() {
-                if let Some(child) = current.child(i) {
+                if let Some(child) = current.child(i as u32) {
                     visit_stack.push(child);
                 }
             }
